@@ -23,9 +23,9 @@ public class Percentuale implements Serializable {
         long totP = r.getLong(2);
         long totNeutre= r.getLong(3);
         long totRece = totN + totP + totNeutre;
-        double percentualeNeg =  Math.round(((double)totN/totRece)*100);
-        double percentualePos =  Math.round(((double)totP/totRece)*100);
-        double percentualeNeutre = Math.round(((double)totNeutre/totRece)*100);
+        double percentualeNeg = ((double) totN/totRece)*100;
+        double percentualePos =  ((double) totP/totRece)*100;
+        double percentualeNeutre = ((double) totNeutre/totRece)*100;
         return new Percentuale(nomeHotel, totRece, totN, totP, totNeutre, percentualeNeg, percentualePos, percentualeNeutre);
     }//convertFromRow
 

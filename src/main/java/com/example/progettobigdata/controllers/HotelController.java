@@ -4,15 +4,14 @@ import com.example.progettobigdata.dto.NegativeReviewsPerHotel;
 
 import com.example.progettobigdata.services.HotelService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 
 @RestController
 @RequestMapping("hotel")
+@CrossOrigin("*")
 public class HotelController {
 
     @Autowired
@@ -30,4 +29,8 @@ public class HotelController {
         return this.service.Negative();
     }
 
+    @GetMapping("getNazionalità")
+    HashMap<String, Double> percentualiNazionalità(@RequestParam String hotelName) {
+         return this.service.Nazionalità(hotelName);
+    }
 }

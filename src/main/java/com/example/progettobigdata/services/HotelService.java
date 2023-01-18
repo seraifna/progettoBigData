@@ -1,15 +1,15 @@
 package com.example.progettobigdata.services;
+import com.example.progettobigdata.dto.HotelNationalityResult;
 import com.example.progettobigdata.dto.NegativeReviewsPerHotel;
 import com.example.progettobigdata.dto.Percentuale;
-import com.example.progettobigdata.dto.RowDTO;
 import com.example.progettobigdata.repositories.HotelRepository;
-import org.apache.hadoop.shaded.org.checkerframework.checker.regex.RegexUtil;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,6 +47,24 @@ public class HotelService {
             throw new RuntimeException(e);
         }
     }
+
+    public HashMap<String, Double> Nazionalità(String hotelName){
+         try {
+              List<HotelNationalityResult> res = this.repository.getNazionalità(hotelName);
+              long totale = this.repository.getTotale(hotelName);
+              HashMap<String, Double> risultato = new HashMap<String, Double>();
+              double percentuale;
+              for(HotelNationalityResult hot : res){
+                    percentuale = (double) hot.getReviewer_Count()/totale*100;
+                    risultato.put(hot.getReviewer_Nationality(),percentuale);
+              }
+              return risultato;
+         }catch(IOException e){
+             throw new RuntimeException(e);
+         }
+    }
+
+
 
     /*public List<RowDTO> getByHotel(String nome, int limit)  {
         try{

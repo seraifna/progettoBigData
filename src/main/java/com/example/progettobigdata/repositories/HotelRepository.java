@@ -1,4 +1,5 @@
 package com.example.progettobigdata.repositories;
+import com.example.progettobigdata.dto.HotelNationalityResult;
 import com.example.progettobigdata.dto.Percentuale;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -8,17 +9,13 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
-import javax.xml.crypto.Data;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.apache.spark.sql.functions.col;
 
 @Repository
 public class HotelRepository {
-
 
     private SparkSession spark = null;
     private Dataset<Row> dataset = null;
@@ -39,6 +36,7 @@ public class HotelRepository {
         this.dataset = this.readDataset();
         this.dataset.createOrReplaceTempView("recensioni");
     }
+
 
 
     public Dataset<Row> queryDiProva() throws IOException {
@@ -63,12 +61,31 @@ public class HotelRepository {
     }
 
 
+    public long getTotale(String hotelName){
+        Dataset<Row> row = this.spark.sql("SELECT COUNT(*) FROM recensioni WHERE Hotel_Name=\""+hotelName+"\"");
+        return row.collectAsList().stream().map(r -> r.getLong(0)).collect(Collectors.toList()).get(0);
+    }
+
+
+
+    public List<HotelNationalityResult> getNazionalità(String nomeHotel) throws IOException {
+
+        Dataset<Row> datarow_Nazionalita = this.spark.sql("SELECT Reviewer_Nationality, " +
+                            "COUNT(*) AS Reviewers_Number " +
+                            "FROM recensioni " +
+                            "WHERE Hotel_Name=\"" + nomeHotel + "\""+
+                            "GROUP BY Reviewer_Nationality");
+        datarow_Nazionalita.show();
+        return datarow_Nazionalita.collectAsList().stream()
+                            .map(r -> HotelNationalityResult.convertFromRow(r)).collect(Collectors.toList());
+    }//getNazionalità
+
+
+
+
+
+
     public List<Percentuale> getNegative() throws IOException {
-
-
-//        Dataset<Row> totRece = this.spark.sql("SELECT Hotel_Name, COUNT(*) as TOT FROM recensioni GROUP BY Hotel_Name");
-//        totRece.createOrReplaceTempView("totRece");
-
 
         String totNeutre = "SELECT Hotel_Name, COUNT(*) as TOT FROM recensioni " +
                 " WHERE recensioni.Reviewer_Score >= 4 AND recensioni.Reviewer_Score < 6  "+
@@ -96,9 +113,7 @@ public class HotelRepository {
                 "WHERE hotelNeg.Hotel_Name = hotelPos.Hotel_Name AND hotelNeg.Hotel_Name = hotelNeutre.Hotel_Name";
         Dataset<Row> percento = this.spark.sql(percentuali);
 
-
         List<Percentuale> ret = percento.collectAsList().stream().map(r-> Percentuale.convertFromRow(r)).collect(Collectors.toList());
         return ret;
-    }
-
+}
 }
