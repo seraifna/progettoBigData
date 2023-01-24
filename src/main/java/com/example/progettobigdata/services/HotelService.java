@@ -1,7 +1,5 @@
 package com.example.progettobigdata.services;
-import com.example.progettobigdata.dto.HotelNationalityResult;
-import com.example.progettobigdata.dto.NegativeReviewsPerHotel;
-import com.example.progettobigdata.dto.Percentuale;
+import com.example.progettobigdata.dto.*;
 import com.example.progettobigdata.repositories.HotelRepository;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -9,8 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -20,29 +17,11 @@ public class HotelService {
     @Autowired
     HotelRepository repository;
 
-     public List<NegativeReviewsPerHotel> queryProva(int offset, int limit){
+//
 
-
+    public List<Percentuale> Percentuals(String hotelName) {
         try {
-            Dataset<Row> data = this.repository.queryDiProva();
-            List<NegativeReviewsPerHotel> ret =  data.collectAsList().stream().map(riga -> NegativeReviewsPerHotel.convertFromRow(riga)).collect(Collectors.toList());
-            int pageSize = limit;
-            int start = pageSize * offset;
-            //if(pageSize+limit > ret.size() ) return new List();
-            // - - - - - - -
-            //               _  _
-            //             *
-
-            return ret.subList(start, start+limit);
-
-        }catch( IOException e){
-            throw new RuntimeException(e);
-        }
-    }
-
-    public List<Percentuale> Negative() {
-        try {
-            return this.repository.getNegative();
+            return this.repository.getPercentuals(hotelName);
         }catch(IOException e){
             throw new RuntimeException(e);
         }
@@ -64,21 +43,76 @@ public class HotelService {
          }
     }
 
+    public List<AverageWordCounter> Accurate() {
+         try{
+             List<AverageWordCounter> ret = this.repository.getMostAccurate();
+             return ret;
+         }catch (IOException e) {
+             throw new RuntimeException(e);
+         }
+    }
 
-
-    /*public List<RowDTO> getByHotel(String nome, int limit)  {
-        try{
-
-            Dataset<Row> data = this.repository.getByName(nome,limit);
-            data.show();
-            // stream -> introdotto con le lambda ed è consigliato per le liste grandi
-            // map -> fa svolgere operazioni sui singoli elementa dalla lista
-            // collect -> si usa sugli array/dataset/hashmap e serve per convertire la lista nel tipo di lista voluta
-            return data.collectAsList().stream().map( r-> RowDTO.convertFromRow(r)).collect(Collectors.toList());
-
-        } catch( IOException e) {
+    //mi prendo un hashset degli hotel con recensioni in cui compaiono i tag che passo come lista di stringhe
+    public HashSet<String> getByTags(List<String> tags){
+         HashSet<String> ret = new HashSet<String>();
+        try {
+            Dataset<Row> nameTags = this.repository.getNameTags();
+            List<NameTags> lista= nameTags.collectAsList().stream().
+                    map(r -> NameTags.convertFromRow(r)).collect(Collectors.toList());
+            for(NameTags hotel : lista){
+                if(!ret.contains(hotel.getHotelName())){
+                    boolean toAdd = true;
+                    inner: for(String tag : tags){
+                                if (!hotel.getTag().contains(tag)) {
+                                    toAdd = false;
+                                    break inner;
+                                }
+                            }//innerfor
+                    if(toAdd) ret.add(hotel.getHotelName());
+                }
+            }//for esterno
+            return ret;
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }*/
+    }
+
+
+    //mi prende i tag separati da , e [] e '
+    private ArrayList<String> parseTagArray(String toParse){
+        StringTokenizer tk = new StringTokenizer(toParse, "[],''");
+        ArrayList<String> ret = new ArrayList<>(10);
+        while(tk.hasMoreTokens()){
+            String tmp = (String) tk.nextToken();
+        //    System.out.println(tmp);
+            tmp=tmp.trim();
+            if (tmp.equals("")) continue;
+            else ret.add(new String (tmp));
+        }
+        return ret;
+    }
+
+
+    //metodo per restituirmi tutti i tag presi una volta per ognuno
+    public HashSet<String> Tags(){
+         Dataset<Row> tagsRisultato = this.repository.getTags();
+         List<String> arrayTags = tagsRisultato.collectAsList().stream().map(r -> r.getString(0)).collect(Collectors.toList());
+         ArrayList<String> tags = new ArrayList<>(100);
+         for(String tag : arrayTags) {
+             tags.addAll(parseTagArray(tag));
+         }
+         return new HashSet<String>(tags);
+    }
+
+
+
+    public SeasonalReviewCounterDTO getSeason(String hotelName) {
+        try {
+            SeasonalReviewCounterDTO date = this.repository.getData(hotelName);
+            return date;
+        }catch(Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }

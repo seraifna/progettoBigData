@@ -11,22 +11,19 @@ import java.io.Serializable;
 
 public class Percentuale implements Serializable {
 
-    private String nomeHotel;
-    private long totRece, totN, totP, totNeutre;
     private double percentualeNeg;
     private double percentualePos;
     private double percentualeNeutre;
 
     public static Percentuale convertFromRow(Row r) {
-        String nomeHotel = r.getString(0);
-        long totN = r.getLong(1);
-        long totP = r.getLong(2);
-        long totNeutre= r.getLong(3);
+        long totN = r.getLong(0);
+        long totP = r.getLong(1);
+        long totNeutre= r.getLong(2);
         long totRece = totN + totP + totNeutre;
         double percentualeNeg = ((double) totN/totRece)*100;
         double percentualePos =  ((double) totP/totRece)*100;
         double percentualeNeutre = ((double) totNeutre/totRece)*100;
-        return new Percentuale(nomeHotel, totRece, totN, totP, totNeutre, percentualeNeg, percentualePos, percentualeNeutre);
+        return new Percentuale(percentualeNeg, percentualePos, percentualeNeutre);
     }//convertFromRow
 
 }

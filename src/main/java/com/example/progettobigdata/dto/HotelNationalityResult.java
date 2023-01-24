@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.apache.spark.sql.Row;
 
-/*Dato il nome di un  hotel come parametro, mi restituisce la percentuale di italiani, inglesi */
 @AllArgsConstructor
 @Data
 public class HotelNationalityResult {
